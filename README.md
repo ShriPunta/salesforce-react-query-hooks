@@ -1,18 +1,39 @@
-# salesforce-react-query-examples
+# Salesforce React Query Examples
 
-Reference patterns for hitting the Salesforce REST API **directly from the browser** using React Query — organised so each pattern is easy to copy, extend, and own.
+![Screenshot of the App](assets/screenshot.png)
+
+A structured set of React Query hooks and live demo patterns for hitting the Salesforce REST API directly from the browser. Copy any hook into your own app or use this as a seed repo to build from.
+
+Stack: **Bun** · Vite · React · TanStack Query · Zod · TypeScript.
+
+> [!WARNING]
+> **This is a learning and code-organisation demo — not a production pattern.**
+>
+> - The UI accepts a plain-text access token and holds it in page state. This is **not safe** for real users or sensitive orgs.
+> - The dev server uses the **Vite dev proxy** to work around Salesforce's CORS restrictions. This proxy does not exist in a production build — the app will not work as-is when deployed.
+>
+> For a production app you need a proper OAuth 2.0 PKCE flow with a backend that handles token exchange and refresh securely. See the companion template: **[salesforce-oauth-pkce-hono-bun](https://github.com/ShriPunta/salesforce-oauth-pkce-hono-bun)**.
+
+## Inspiration
+
+While building [SFDevTools](https://www.sfdevtools.com), I leaned heavily on React Query — it made async Salesforce calls dramatically simpler and the app noticeably snappier. I couldn't find any existing hook libraries or seed repos targeting the Salesforce REST API, so I built this: a minimal, copy-paste-friendly reference for anyone learning React Query with a well-structured API like Salesforce's, or anyone who wants a head start on a real app.
+
+## What it provides
+
+- **Live cache visualisation** — every tab shows a `CacheBadge` that indicates whether data came from cache or a fresh network request, making React Query's stale-while-revalidate behaviour visible without opening DevTools.
+- **Generic base hooks** — one reusable hook per API shape (`useSOQLInfiniteQuery`, `useDescribeQuery`, `useUpdateSObjectMutation`); specific hooks are thin wrappers that pin the query and set an appropriate `staleTime`.
+- **Full mutation example** — optimistic PATCH with automatic rollback on error.
+- **Zero CORS config needed** — the dev server proxies all Salesforce requests, so you can point the app at any org with just a session token.
 
 ## Demos
 
 | Tab | Hook | What it shows |
 |-----|------|---------------|
-| Accounts | `useAccountsQuery` | Infinite SOQL + cursor pagination |
-| Profiles | `useProfilesQuery` | 24 h `staleTime` — instant cache hits on revisit |
+| Accounts | `useSOQLInfiniteQuery` | Infinite SOQL + cursor pagination |
+| Profiles | `useSOQLInfiniteQuery` | 24 h `staleTime` — instant cache hits on revisit |
 | Org Limits | `useLimitsQuery` | REST API (non-SOQL) + background refetch |
 | Describe | `useDescribeQuery` | SObject schema inspection |
 | Edit | `useUpdateSObjectMutation` | Optimistic PATCH + rollback on error |
-
-Every tab shows a `CacheBadge` — a live indicator of whether data came from cache or triggered a network request. This makes React Query's stale-while-revalidate behaviour visible without opening DevTools.
 
 ## Quickstart
 
@@ -21,7 +42,7 @@ bun install
 bun run dev
 ```
 
-Open the app, paste:
+Open the app and paste:
 
 1. **Instance URL** — e.g. `https://yourorg.my.salesforce.com`
 2. **Session token** — see below
@@ -40,9 +61,7 @@ Use the `Access Token` and `Instance Url` it prints. Tokens expire — re-run wh
 
 The dev server includes a dynamic proxy. All Salesforce requests are forwarded server-side, so **no CORS configuration is needed in your org** during local development. The proxy reads the `X-SF-Instance` header from each request to determine the target org — the instance URL you enter in the UI is forwarded automatically.
 
-In production (i.e. a real deployed app) you would either:
-- keep a backend proxy, or
-- allowlist your origin in **Setup → CORS**.
+In production you would either keep a backend proxy or allowlist your origin in **Setup → CORS**.
 
 ## Provider
 
@@ -62,22 +81,20 @@ import { SFProvider } from "./provider";
 
 ## Hook organisation
 
-Hooks live in three subdirectories that mirror how the Salesforce API itself is divided.
-
 ```
 src/hooks/
   soql/
-    useSOQLInfiniteQuery.ts   ← base: any SOQL query with pagination
-    useAccountsQuery.ts       ← specific: Account records (staleTime 5 m)
-    useProfilesQuery.ts       ← specific: Profile records (staleTime 24 h)
+    useSOQLInfiniteQuery.ts     ← base: any SOQL query with pagination
+    useAccountsQuery.ts         ← specific: Account records (staleTime 5 m)
+    useProfilesQuery.ts         ← specific: Profile records (staleTime 24 h)
   api/
-    useDescribeQuery.ts       ← sobjects/{Type}/describe (staleTime 30 m)
-    useLimitsQuery.ts         ← /limits endpoint (staleTime 5 m)
+    useDescribeQuery.ts         ← sobjects/{Type}/describe (staleTime 30 m)
+    useLimitsQuery.ts           ← /limits endpoint (staleTime 5 m)
   mutations/
     useUpdateSObjectMutation.ts ← PATCH with optimistic update + rollback
 ```
 
-**Pattern:** one generic base hook per API shape (`useSOQLInfiniteQuery`, `useLimitsQuery`), then thin wrappers that pin the query string and tweak `staleTime` to match how often the data actually changes. Adding a new SOQL-backed hook means copying `useAccountsQuery.ts` and changing the query.
+**Pattern:** one generic base hook per API shape, then thin wrappers that pin the query string and tune `staleTime` to how often the data actually changes. Adding a new SOQL-backed hook means copying `useAccountsQuery.ts` and changing the query.
 
 ## Layout
 
@@ -104,4 +121,4 @@ src/
 
 ## License
 
-MIT — Copyright (c) 2026 Shridhar Puntambekar
+MIT — Copyright (c) 2026 Shridhar Puntambekar.

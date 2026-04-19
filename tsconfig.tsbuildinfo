@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/client.ts","./src/main.tsx","./src/provider.tsx","./src/schemas.ts","./src/examples/accountlist.tsx","./src/examples/describeviewer.tsx","./src/examples/editaccount.tsx","./src/hooks/usedescribequery.ts","./src/hooks/usesoqlinfinitequery.ts","./src/hooks/useupdatesobjectmutation.ts"],"version":"5.9.3"}

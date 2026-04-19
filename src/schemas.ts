@@ -7,11 +7,11 @@ export const SObjectRecordSchema = z
 				type: z.string(),
 				url: z.string().optional(),
 			})
-			.passthrough()
+			.loose()
 			.optional(),
 		Id: z.string().optional(),
 	})
-	.passthrough();
+	.loose();
 export type SObjectRecord = z.infer<typeof SObjectRecordSchema>;
 
 export const SOQLQueryResultSchema = z.object({

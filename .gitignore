@@ -6,3 +6,5 @@ dist
 .env.*
 bun.lockb
 bun.lock
+*.tsbuildinfo
+.vscode/
