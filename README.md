@@ -1,14 +1,18 @@
 # salesforce-react-query-examples
 
-Reference patterns for hitting the Salesforce REST API **directly from the browser** using React Query.
+Reference patterns for hitting the Salesforce REST API **directly from the browser** using React Query — organised so each pattern is easy to copy, extend, and own.
 
-Three demos:
+## Demos
 
-- `useSOQLInfiniteQuery` — `/query?q=...` with `nextRecordsUrl` cursor pagination via `useInfiniteQuery`
-- `useDescribeQuery` — `/sobjects/{Type}/describe`
-- `useUpdateSObjectMutation` — `PATCH /sobjects/{Type}/{id}` with optimistic update + rollback
+| Tab | Hook | What it shows |
+|-----|------|---------------|
+| Accounts | `useAccountsQuery` | Infinite SOQL + cursor pagination |
+| Profiles | `useProfilesQuery` | 24 h `staleTime` — instant cache hits on revisit |
+| Org Limits | `useLimitsQuery` | REST API (non-SOQL) + background refetch |
+| Describe | `useDescribeQuery` | SObject schema inspection |
+| Edit | `useUpdateSObjectMutation` | Optimistic PATCH + rollback on error |
 
-No backend, no proxy. You paste a session token + instance URL into the provider.
+Every tab shows a `CacheBadge` — a live indicator of whether data came from cache or triggered a network request. This makes React Query's stale-while-revalidate behaviour visible without opening DevTools.
 
 ## Quickstart
 
@@ -22,11 +26,9 @@ Open the app, paste:
 1. **Instance URL** — e.g. `https://yourorg.my.salesforce.com`
 2. **Session token** — see below
 
-The credentials live in `sessionStorage` only.
+Credentials live in `sessionStorage` only.
 
 ## Getting a session token
-
-Easiest: Salesforce CLI.
 
 ```bash
 sf org display --target-org <alias>
@@ -34,13 +36,13 @@ sf org display --target-org <alias>
 
 Use the `Access Token` and `Instance Url` it prints. Tokens expire — re-run when you get 401s.
 
-## CORS caveat (REQUIRED)
+## CORS
 
-Salesforce blocks browser fetches from arbitrary origins. You must allowlist your dev origin in the org:
+The dev server includes a dynamic proxy. All Salesforce requests are forwarded server-side, so **no CORS configuration is needed in your org** during local development. The proxy reads the `X-SF-Instance` header from each request to determine the target org — the instance URL you enter in the UI is forwarded automatically.
 
-**Setup -> CORS -> New** and add e.g. `http://localhost:5173`.
-
-Without this you'll see CORS errors in DevTools and every request will fail. There is no workaround that doesn't involve a backend proxy.
+In production (i.e. a real deployed app) you would either:
+- keep a backend proxy, or
+- allowlist your origin in **Setup → CORS**.
 
 ## Provider
 
@@ -56,11 +58,26 @@ import { SFProvider } from "./provider";
 </SFProvider>
 ```
 
-`getToken` may return a `Promise<string>` if you want to wire in a refresh flow.
+`getToken` may return a `Promise<string>` to support async token refresh.
 
-## Verification status
+## Hook organisation
 
-This repo's TypeScript and build pipelines are verified. Runtime data flow against a real Salesforce org has **not** been verified by the author — you'll need a real token + a CORS-allowlisted origin to test end-to-end.
+Hooks live in three subdirectories that mirror how the Salesforce API itself is divided.
+
+```
+src/hooks/
+  soql/
+    useSOQLInfiniteQuery.ts   ← base: any SOQL query with pagination
+    useAccountsQuery.ts       ← specific: Account records (staleTime 5 m)
+    useProfilesQuery.ts       ← specific: Profile records (staleTime 24 h)
+  api/
+    useDescribeQuery.ts       ← sobjects/{Type}/describe (staleTime 30 m)
+    useLimitsQuery.ts         ← /limits endpoint (staleTime 5 m)
+  mutations/
+    useUpdateSObjectMutation.ts ← PATCH with optimistic update + rollback
+```
+
+**Pattern:** one generic base hook per API shape (`useSOQLInfiniteQuery`, `useLimitsQuery`), then thin wrappers that pin the query string and tweak `staleTime` to match how often the data actually changes. Adding a new SOQL-backed hook means copying `useAccountsQuery.ts` and changing the query.
 
 ## Layout
 
@@ -68,18 +85,23 @@ This repo's TypeScript and build pipelines are verified. Runtime data flow again
 src/
   provider.tsx
   client.ts
+  schemas.ts
   hooks/
-    useSOQLInfiniteQuery.ts
-    useDescribeQuery.ts
-    useUpdateSObjectMutation.ts
+    soql/
+    api/
+    mutations/
   examples/
     AccountList.tsx
+    ProfileList.tsx
+    OrgLimits.tsx
     DescribeViewer.tsx
     EditAccount.tsx
+  components/
+    CacheBadge.tsx
   App.tsx
   main.tsx
 ```
 
 ## License
 
-MIT — Copyright (c) 2026 Shri
+MIT — Copyright (c) 2026 Shridhar Puntambekar
