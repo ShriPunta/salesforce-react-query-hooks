@@ -125,6 +125,17 @@ src/
   main.tsx
 ```
 
+## Git hooks
+
+```
+git commit
+  └─ lint-staged
+       └─ biome check --write   ← format + lint all staged *.{ts,tsx,js,jsx,json}
+
+git push
+  └─ tsc --noEmit              ← full type-check before anything reaches the remote
+```
+
 ## License
 
 MIT — Copyright (c) 2026 Shridhar Puntambekar.

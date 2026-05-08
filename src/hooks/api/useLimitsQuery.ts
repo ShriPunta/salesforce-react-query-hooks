@@ -27,7 +27,7 @@ export function useLimitsQuery(options: UseLimitsQueryOptions = {}) {
 
 	return useQuery({
 		queryKey: limitsKeys.org(instanceUrl),
-		queryFn: () => client.get("limits", { schema: LimitsSchema }),
+		queryFn: () => client.get<Limits>("limits", { schema: LimitsSchema }),
 		enabled: options.enabled !== false,
 		staleTime: options.staleTime ?? 1000 * 60 * 5,
 	});
