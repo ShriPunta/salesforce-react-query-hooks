@@ -41,10 +41,20 @@ While building [SFDevTools](https://www.sfdevtools.com) I leaned heavily on Reac
 | Describe | `useDescribeQuery` | SObject schema inspection |
 | Edit | `useUpdateSObjectMutation` | Optimistic PATCH + rollback on error |
 
+## Package manager: pnpm + Bun
+
+**pnpm** is the package manager; **bun** is the runtime. They are not interchangeable:
+
+- `pnpm install` / `pnpm add` / `pnpm remove` — install or modify deps
+- `bun run <script>` — execute scripts (never `pnpm run`)
+- `npm`, `yarn`, and `bun install` are blocked
+
+**Why pnpm?** npm's `preinstall`/`postinstall` lifecycle scripts execute arbitrary code during `npm install` with no opt-out, enabling supply-chain attacks via malicious packages. pnpm disables lifecycle scripts on third-party packages by default (`allowBuilds` in `pnpm-workspace.yaml`), requiring explicit opt-in for packages that legitimately need native compilation.
+
 ## Quickstart
 
 ```bash
-bun install
+pnpm install
 bun run dev
 ```
 
