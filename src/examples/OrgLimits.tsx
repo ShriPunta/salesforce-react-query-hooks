@@ -101,7 +101,9 @@ export function OrgLimits() {
 
 			{q.isLoading && <p className="text-sm text-gray-500">Loading…</p>}
 			{q.isError && (
-				<p className="text-sm text-red-600">Error: {(q.error as Error).message}</p>
+				<p className="text-sm text-red-600">
+					Error: {(q.error as Error).message}
+				</p>
 			)}
 
 			{q.data && (
